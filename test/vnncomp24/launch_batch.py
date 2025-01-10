@@ -9,7 +9,7 @@ from pynever.strategies.conversion.converters.onnx import ONNXConverter
 from pynever.strategies.verification.properties import VnnLibProperty
 import pynever.strategies.verification.algorithms as veralgs
 import pynever.strategies.verification.parameters as verparams
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 BENCHMARKS_PATH = '../../examples'
 

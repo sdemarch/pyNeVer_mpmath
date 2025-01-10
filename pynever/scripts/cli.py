@@ -13,7 +13,7 @@ import pynever.strategies.verification.properties as verprop
 import pynever.utilities as utilities
 from pynever.strategies.conversion.converters.onnx import ONNXConverter
 from pynever.strategies.conversion.representation import load_network_path, ONNXNetwork
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 # Log to stdout
 logger = logging.getLogger()

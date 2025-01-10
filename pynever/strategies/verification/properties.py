@@ -1,10 +1,10 @@
 from fractions import Fraction
 
 import pynever.strategies.smt_reading as reading
-from pynever import tensors
+from pynever import tensor_classic
 from pynever.exceptions import InvalidDimensionError
 from pynever.strategies.abstraction.star import Star
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 
 class NeverProperty:

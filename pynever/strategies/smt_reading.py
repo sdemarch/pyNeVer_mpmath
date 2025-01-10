@@ -3,7 +3,7 @@ import re
 import numpy as np
 from pysmt.smtlib.parser import SmtLibParser
 
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 
 class ExprNode:

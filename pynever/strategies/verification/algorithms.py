@@ -20,7 +20,7 @@ from pynever.strategies.verification.parameters import SSLPVerificationParameter
 from pynever.strategies.verification.properties import NeverProperty
 from pynever.strategies.verification.ssbp.constants import BoundsBackend, IntersectionStrategy, RefinementTarget, \
     RefinementStrategy, BoundsDirection
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 
 class VerificationStrategy(abc.ABC):

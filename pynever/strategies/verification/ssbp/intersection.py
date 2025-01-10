@@ -12,7 +12,7 @@ from pynever.strategies.bounds_propagation.utility import functions as utilf
 from pynever.strategies.bounds_propagation.utility.functions import StabilityInfo
 from pynever.strategies.verification.properties import NeverProperty
 from pynever.strategies.verification.ssbp import propagation
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 
 def intersect_star_lp(star: ExtendedStar, prop: NeverProperty, network: SequentialNetwork, nn_bounds: VerboseBounds) \

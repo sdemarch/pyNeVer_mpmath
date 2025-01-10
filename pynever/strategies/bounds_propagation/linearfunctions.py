@@ -1,4 +1,4 @@
-from pynever import tensors
+from pynever import tensor_classic
 from pynever.strategies.bounds_propagation.utility.functions import *
 
 

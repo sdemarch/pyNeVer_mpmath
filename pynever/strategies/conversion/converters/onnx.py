@@ -4,7 +4,7 @@ import onnx.numpy_helper
 
 import pynever.networks as networks
 import pynever.nodes as nodes
-import pynever.tensors as tensors
+import pynever.tensor_classic as tensors
 from pynever.strategies.conversion.representation import ConversionStrategy, ONNXNetwork
 
 

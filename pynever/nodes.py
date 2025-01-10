@@ -7,8 +7,11 @@ import abc
 import copy
 import math
 
+import mpmath
 import numpy as np
+from pysmt.decorators import deprecated
 
+from pynever import tensors
 from pynever.exceptions import InvalidDimensionError, OutOfRangeError
 from pynever.tensors import Tensor
 
@@ -113,17 +116,14 @@ class ELUNode(ConcreteLayerNode):
 
     Attributes
     ----------
-    alpha : float, optional
+    alpha : mpmath.mpf, optional
         The alpha value for the ELU formulation (default: 1.0).
 
     """
 
-    def __init__(self, identifier: str, in_dim: tuple, alpha: float = 1.0):
+    def __init__(self, identifier: str, in_dim: tuple, alpha: mpmath.mpf = mpmath.mpf(1.0)):
         if len(in_dim) < 1:
             raise InvalidDimensionError("ELUNode: in_dim cannot be empty")
-
-        if alpha is None:
-            alpha = 1.0
 
         out_dim = copy.deepcopy(in_dim)
         self.alpha = alpha
@@ -142,17 +142,14 @@ class CELUNode(ConcreteLayerNode):
 
     Attributes
     ----------
-    alpha : float, optional
+    alpha : mpmath.mpf, optional
         The alpha value for the CELU formulation (default: 1.0).
 
     """
 
-    def __init__(self, identifier: str, in_dim: tuple, alpha: float = 1.0):
+    def __init__(self, identifier: str, in_dim: tuple, alpha: mpmath.mpf = mpmath.mpf(1.0)):
         if len(in_dim) < 1:
             raise InvalidDimensionError("CELUNode: in_dim cannot be empty")
-
-        if alpha is None:
-            alpha = 1.0
 
         out_dim = copy.deepcopy(in_dim)
         self.alpha = alpha
@@ -171,17 +168,14 @@ class LeakyReLUNode(ConcreteLayerNode):
 
     Attributes
     ----------
-    negative_slope : float, optional
+    negative_slope : mpmath.mpf, optional
         Controls the angle of the negative slope (default: 1e-2).
 
     """
 
-    def __init__(self, identifier: str, in_dim: tuple, negative_slope: float = 1e-2):
+    def __init__(self, identifier: str, in_dim: tuple, negative_slope: mpmath.mpf = mpmath.mpf(1e-2)):
         if len(in_dim) < 1:
             raise InvalidDimensionError("LeakyReLUNode: in_dim cannot be empty")
-
-        if negative_slope is None:
-            negative_slope = 1e-2
 
         out_dim = copy.deepcopy(in_dim)
         self.negative_slope = negative_slope
@@ -274,21 +268,21 @@ class FullyConnectedNode(ConcreteLayerNode):
 
         # We assume the Linear operation is x * W^T
         if weight is None:
-            weight = np.random.uniform(-math.sqrt(1 / in_features), math.sqrt(1 / in_features),
-                                       size=[out_features, in_features])
+            weight = mpmath.matrix(np.random.uniform(-math.sqrt(1 / in_features), math.sqrt(1 / in_features),
+                                                     size=[out_features, in_features]))
 
         weight_error = f"Weight dimensions should be equal to out_features ({out_features}) " \
                        f"and in_features ({in_features}) respectively."
 
-        if not (weight.shape[0] == out_features and weight.shape[1] == in_features):
+        if not (weight.rows == out_features and weight.cols == in_features):
             raise InvalidDimensionError(weight_error)
 
         if has_bias:
             if bias is None:
-                bias = np.random.uniform(-math.sqrt(1 / in_features), math.sqrt(1 / in_features),
-                                         size=[out_features])
+                bias = mpmath.matrix(np.random.uniform(-math.sqrt(1 / in_features), math.sqrt(1 / in_features),
+                                                       size=[out_features]))
             else:
-                if bias.shape != (out_features,):
+                if bias.rows != out_features:
                     raise InvalidDimensionError(f"Bias shape is wrong: it should be equal to ({out_features},)")
         else:
             bias = None
@@ -297,12 +291,15 @@ class FullyConnectedNode(ConcreteLayerNode):
         self.has_bias = has_bias
         self.bias = bias
 
+    @deprecated
     def get_layer_bias_as_two_dimensional(self) -> Tensor:
         """
         This method expands the bias since they are memorized
         like one-dimensional vectors in FC nodes.
 
         """
+
+        # Non serve perché mpmath ha sempre 2 dimensioni
 
         return self.bias if self.bias.shape == (self.weight.shape[0], 1) else np.expand_dims(self.bias, 1)
 
@@ -337,9 +334,9 @@ class BatchNormNode(ConcreteLayerNode):
         Tensor containing the running mean parameter of the Batch Normalization Layer. (default: None)
     running_var : Tensor, optional
         Tensor containing the running var parameter of the Batch Normalization Layer. (default: None)
-    eps : float, optional
+    eps : mpmath.mpf, optional
         Value added to the denominator for numerical stability (default: 1e-5).
-    momentum : float, optional
+    momentum : mpmath.mpf, optional
         Value used for the running_mean and running_var computation. Can be set to None
         for cumulative moving average (default: 0.1)
     affine : bool, optional
@@ -351,7 +348,8 @@ class BatchNormNode(ConcreteLayerNode):
     """
 
     def __init__(self, identifier: str, in_dim: tuple, weight: Tensor = None, bias: Tensor = None,
-                 running_mean: Tensor = None, running_var: Tensor = None, eps: float = 1e-5, momentum: float = 0.1,
+                 running_mean: Tensor = None, running_var: Tensor = None, eps: mpmath.mpf = 1e-5,
+                 momentum: mpmath.mpf = 0.1,
                  affine: bool = True, track_running_stats: bool = True):
 
         # Since we don't consider the batch dimension in our representation we assume that the first dimension of
@@ -366,9 +364,9 @@ class BatchNormNode(ConcreteLayerNode):
 
         if track_running_stats:
             if running_mean is None:
-                running_mean = np.ones(num_features)
+                running_mean = tensors.ones(num_features)
             if running_var is None:
-                running_var = np.zeros(num_features)
+                running_var = tensors.zeros(num_features)
 
             if not running_var.shape[0] == num_features:
                 raise InvalidDimensionError("The dimension of the running_var should be equal to num_features")
@@ -693,17 +691,17 @@ class LRNNode(ConcreteLayerNode):
     ----------
     size : int
         Amount of neighbouring channels used for normalization
-    alpha : float, optional
+    alpha : mpmath.mpf, optional
         Multiplicative factor (default: 0.0001)
-    beta : float, optional
+    beta : mpmath.mpf, optional
         Exponent. (default: 0.75)
-    k : float, optional
+    k : mpmath.mpf, optional
         Additive factor (default: 1.0)
 
     """
 
-    def __init__(self, identifier: str, in_dim: tuple, size: int, alpha: float = 0.0001, beta: float = 0.75,
-                 k: float = 1.0):
+    def __init__(self, identifier: str, in_dim: tuple, size: int, alpha: mpmath.mpf = 0.0001, beta: mpmath.mpf = 0.75,
+                 k: mpmath.mpf = 1.0):
         if len(in_dim) < 2:
             raise InvalidDimensionError("The input dimension must be at least 2 (one for the channel and one for the "
                                         "rest)")
@@ -899,12 +897,12 @@ class DropoutNode(ConcreteLayerNode):
     The inplace parameter of pytorch and the seed attribute and training_mode of onnx are not supported.
     Attributes
     ----------
-    p : float, optional
+    p : mpmath.mpf, optional
         Probability of an element to be zeroed (default: 0.5)
 
     """
 
-    def __init__(self, identifier: str, in_dim: tuple, p: float = 0.5):
+    def __init__(self, identifier: str, in_dim: tuple, p: mpmath.mpf = 0.5):
         out_dim = copy.deepcopy(in_dim)
         super().__init__(identifier, [in_dim], out_dim)
         if not (0 <= p <= 1):

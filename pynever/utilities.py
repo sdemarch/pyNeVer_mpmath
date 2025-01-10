@@ -41,6 +41,7 @@ def execute_network(network: networks.NeuralNetwork, net_input: tensors.Tensor) 
     py_net.pytorch_network.eval()
     py_net.pytorch_network.float()
 
+    # TODO: ???
     output = py_net.pytorch_network(input_t.float().permute(*torch.arange(input_t.ndim - 1, -1, -1)))
 
     return tensors.array(output.detach().numpy().T)

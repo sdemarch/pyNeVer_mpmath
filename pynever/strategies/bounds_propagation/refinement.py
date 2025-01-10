@@ -13,7 +13,7 @@ from pynever.strategies.bounds_propagation.bounds import HyperRectangleBounds, V
 from pynever.strategies.bounds_propagation.bounds_manager import BoundsManager
 from pynever.strategies.bounds_propagation.linearfunctions import LinearFunctions
 from pynever.strategies.verification.ssbp.constants import RefinementTarget, NeuronSplit, BoundsDirection
-from pynever.tensors import Tensor
+from pynever.tensor_classic import Tensor
 
 
 class BoundsRefinement:

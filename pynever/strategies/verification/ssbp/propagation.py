@@ -1,5 +1,5 @@
 import pynever.strategies.bounds_propagation.utility.functions as utilf
-from pynever import networks, nodes, tensors
+from pynever import networks, nodes, tensor_classic
 from pynever.strategies.abstraction.star import ExtendedStar
 from pynever.strategies.bounds_propagation.bounds import VerboseBounds
 from pynever.strategies.bounds_propagation.linearfunctions import LinearFunctions
