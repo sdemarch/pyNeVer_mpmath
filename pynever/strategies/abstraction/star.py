@@ -5,17 +5,18 @@ import abc
 import time
 import uuid
 
+import mpmath
 import numpy as np
 import numpy.linalg as la
 from ortools.linear_solver import pywraplp
 
 import pynever.strategies.bounds_propagation.utility.functions as utilf
-import pynever.tensor_classic as tensors
+from pynever import tensors
 from pynever.exceptions import InvalidDimensionError, NonOptimalLPError
 from pynever.strategies.abstraction import LOGGER_EMPTY, LOGGER_LP, LOGGER_LB, LOGGER_UB
 from pynever.strategies.bounds_propagation.bounds import AbstractBounds, VerboseBounds
 from pynever.strategies.bounds_propagation.linearfunctions import LinearFunctions
-from pynever.tensor_classic import Tensor
+from pynever.tensors import Tensor
 
 
 class AbsElement(abc.ABC):
@@ -71,34 +72,34 @@ class Star:
     def __init__(self, predicate_matrix: Tensor, predicate_bias: Tensor, center: Tensor = None,
                  basis_matrix: Tensor = None):
 
-        predicate_dim_message = f"Error: the first dimension of the predicate_matrix ({predicate_matrix.shape[0]}) " \
-                                f"must be equal to the dimension of the predicate_bias ({predicate_bias.shape[0]})."
-        if predicate_matrix.shape[0] != predicate_bias.shape[0]:
+        predicate_dim_message = f"Error: the first dimension of the predicate_matrix ({predicate_matrix.rows}) " \
+                                f"must be equal to the dimension of the predicate_bias ({predicate_bias.rows})."
+        if predicate_matrix.rows != predicate_bias.rows:
             raise InvalidDimensionError(predicate_dim_message)
 
         self.predicate_matrix: Tensor = predicate_matrix
         self.predicate_bias: Tensor = predicate_bias
 
         if center is None and basis_matrix is None:
-            self.center: Tensor = tensors.zeros((predicate_matrix.shape[1], 1))
-            self.basis_matrix: Tensor = tensors.identity(predicate_matrix.shape[1])
+            self.center: Tensor = tensors.zeros((predicate_matrix.cols, 1))
+            self.basis_matrix: Tensor = tensors.identity(predicate_matrix.cols)
 
         else:
-            center_dim_message = f"Error: the first dimension of the basis_matrix ({basis_matrix.shape[0]}) " \
-                                 f"must be equal to the dimension of the center ({center.shape[0]})."
-            if center.shape[0] != basis_matrix.shape[0]:
+            center_dim_message = f"Error: the first dimension of the basis_matrix ({basis_matrix.rows}) " \
+                                 f"must be equal to the dimension of the center ({center.rows})."
+            if center.rows != basis_matrix.rows:
                 raise InvalidDimensionError(center_dim_message)
 
-            basis_dim_message = f"Error: the second dimension of the basis_matrix ({basis_matrix.shape[1]}) " \
+            basis_dim_message = f"Error: the second dimension of the basis_matrix ({basis_matrix.cols}) " \
                                 f"must be equal to the second dimension of the predicate_matrix " \
-                                f"({predicate_matrix.shape[1]})."
-            if basis_matrix.shape[1] != predicate_matrix.shape[1]:
+                                f"({predicate_matrix.cols})."
+            if basis_matrix.cols != predicate_matrix.cols:
                 raise InvalidDimensionError(basis_dim_message)
 
             self.center: Tensor = center
             self.basis_matrix: Tensor = basis_matrix
 
-        self.n_neurons: int = self.center.shape[0]
+        self.n_neurons: int = self.center.rows
 
         # Private Attributes used for the sampling of the star.
         self.__auxiliary_points: list[Tensor] | None = None
@@ -119,7 +120,7 @@ class Star:
 
         solver, alphas, constraints = self.__get_predicate_lp_solver()
         objective = solver.Objective()
-        for j in range(self.predicate_matrix.shape[1]):
+        for j in range(self.predicate_matrix.cols):
             objective.SetCoefficient(alphas[j], 0)
         objective.SetOffset(0)
 
@@ -135,13 +136,13 @@ class Star:
 
         return is_empty
 
-    def get_bounds(self, i: int) -> tuple[float | None, float | None]:
+    def get_bounds(self, i: int) -> tuple[mpmath.mpf | None, mpmath.mpf | None]:
         """
         Function used to get the upper and lower bounds of the n variables of the star.
 
         Return
         ---------
-        (float, float)
+        (mpmath.mpf, mpmath.mpf)
             Tuple containing the lower and upper bounds of the variable i of the star
 
         """
@@ -150,7 +151,7 @@ class Star:
 
         solver, alphas, constraints = self.__get_predicate_lp_solver()
         objective = solver.Objective()
-        for j in range(self.basis_matrix.shape[1]):
+        for j in range(self.basis_matrix.cols):
             objective.SetCoefficient(alphas[j], self.basis_matrix[i, j])
         objective.SetOffset(self.center[i, 0])
 
@@ -168,12 +169,12 @@ class Star:
         ub_start = 0
         ub_end = 0
         if status != pywraplp.Solver.INFEASIBLE and status != pywraplp.Solver.ABNORMAL:
-            lb = solver.Objective().Value()
+            lb = mpmath.mpf(solver.Objective().Value())
             objective.SetMaximization()
             ub_start = time.perf_counter()
             status = solver.Solve()
             ub_end = time.perf_counter()
-            ub = solver.Objective().Value()
+            ub = mpmath.mpf(solver.Objective().Value())
 
         end_time = time.perf_counter()
 
@@ -200,8 +201,8 @@ class Star:
 
         """
 
-        dim_error_msg = f"Wrong dimensionality for alpha_point: it should be {self.predicate_matrix.shape[1]} by one."
-        if alpha_point.shape[0] != self.predicate_matrix.shape[1]:
+        dim_error_msg = f"Wrong dimensionality for alpha_point: it should be {self.predicate_matrix.cols} by one."
+        if alpha_point.rows != self.predicate_matrix.cols:
             raise InvalidDimensionError(dim_error_msg)
 
         tests = tensors.matmul(self.predicate_matrix, alpha_point) <= self.predicate_bias
@@ -209,7 +210,7 @@ class Star:
 
         return test
 
-    def check_point_inside(self, point: Tensor, epsilon: float) -> bool:
+    def check_point_inside(self, point: Tensor, epsilon: mpmath.mpf) -> bool:
         """
         Function which checks if the point passed as input is valid with respect to the constraints defined by the
         predicate matrix and bias of the star.
@@ -230,16 +231,16 @@ class Star:
 
         solver, alphas, constraints = self.__get_predicate_lp_solver()
 
-        for i in range(self.basis_matrix.shape[0]):
+        for i in range(self.basis_matrix.rows):
             lb = point[i][0] - self.center[i][0] - epsilon
             ub = point[i][0] - self.center[i][0] + epsilon
             new_constraint = solver.Constraint(lb, ub)
-            for j in range(self.basis_matrix.shape[1]):
+            for j in range(self.basis_matrix.cols):
                 new_constraint.SetCoefficient(alphas[j], self.basis_matrix[i, j])
             constraints.append(new_constraint)
 
         objective = solver.Objective()
-        for j in range(self.predicate_matrix.shape[1]):
+        for j in range(self.predicate_matrix.cols):
             objective.SetCoefficient(alphas[j], 0)
         objective.SetOffset(0)
 
@@ -261,7 +262,7 @@ class Star:
 
         if self.__current_point is None or new_start:
             starting_point = self.__get_starting_point()
-            current_point = np.array(starting_point)
+            current_point = tensors.array(starting_point)
         else:
             current_point = self.__current_point
 
@@ -269,15 +270,16 @@ class Star:
         samples = []
         while len(samples) < num_samples:
 
-            direction = np.random.randn(self.predicate_matrix.shape[1], 1)
-            direction = direction / la.norm(direction)
+            direction = np.random.randn(self.predicate_matrix.cols, 1)
+            direction = mpmath.mpf(direction / la.norm(direction))
             lambdas = []
-            for i in range(self.predicate_matrix.shape[0]):
+            for i in range(self.predicate_matrix.rows):
 
-                if not np.isclose(np.matmul(self.predicate_matrix[i, :], direction), 0):
+                if not np.isclose(tensors.matmul(self.predicate_matrix[i, :], direction), 0):
                     temp = auxiliary_points[i] - current_point
-                    lam = np.matmul(self.predicate_matrix[i, :], temp) / (np.matmul(self.predicate_matrix[i, :],
-                                                                                    direction))
+                    lam = tensors.matmul(self.predicate_matrix[i, :], temp) / (
+                        tensors.matmul(self.predicate_matrix[i, :],
+                                       direction))
                     lambdas.append(lam)
 
             lambdas = np.array(lambdas)
@@ -316,7 +318,7 @@ class Star:
 
         return Star(new_pred, new_bias, new_c, new_b)
 
-    def create_approx(self, index: int, lb: float, ub: float) -> Star:
+    def create_approx(self, index: int, lb: mpmath.mpf, ub: mpmath.mpf) -> Star:
         """
         Function to build the approximate star for the given ReLU neuron
 
@@ -326,29 +328,29 @@ class Star:
         mask[index, index] = 0
 
         # Build all components of the approximate star
-        col_c_mat = self.predicate_matrix.shape[1]
-        row_c_mat = self.predicate_matrix.shape[0]
+        col_c_mat = self.predicate_matrix.cols
+        row_c_mat = self.predicate_matrix.rows
 
         c_mat_1 = tensors.zeros((1, col_c_mat + 1))
         c_mat_1[0, col_c_mat] = -1
-        c_mat_2 = tensors.hstack((tensors.array([self.basis_matrix[index, :]]), -tensors.ones((1, 1))))
+        c_mat_2 = tensors.hstack_2d((tensors.array([self.basis_matrix[index, :]]), -tensors.ones((1, 1))))
         coef_3 = - ub / (ub - lb)
-        c_mat_3 = tensors.hstack((tensors.array([coef_3 * self.basis_matrix[index, :]]), tensors.ones((1, 1))))
-        c_mat_0 = tensors.hstack((self.predicate_matrix, tensors.zeros((row_c_mat, 1))))
+        c_mat_3 = tensors.hstack_2d((tensors.array([coef_3 * self.basis_matrix[index, :]]), tensors.ones((1, 1))))
+        c_mat_0 = tensors.hstack_2d((self.predicate_matrix, tensors.zeros((row_c_mat, 1))))
 
         d_0 = self.predicate_bias
         d_1 = tensors.zeros((1, 1))
         d_2 = -self.center[index] * tensors.ones((1, 1))
         d_3 = tensors.array([(ub / (ub - lb)) * (self.center[index] - lb)])
 
-        new_pred_mat = tensors.vstack((c_mat_0, c_mat_1, c_mat_2, c_mat_3))
-        new_pred_bias = tensors.vstack((d_0, d_1, d_2, d_3))
+        new_pred_mat = tensors.vstack_2d((c_mat_0, c_mat_1, c_mat_2, c_mat_3))
+        new_pred_bias = tensors.vstack_2d((d_0, d_1, d_2, d_3))
 
         new_center = tensors.matmul(mask, self.center)
         temp_basis_mat = tensors.matmul(mask, self.basis_matrix)
-        temp_vec = tensors.zeros((self.basis_matrix.shape[0], 1))
+        temp_vec = tensors.zeros((self.basis_matrix.rows, 1))
         temp_vec[index, 0] = 1
-        new_basis_mat = tensors.hstack((temp_basis_mat, temp_vec))
+        new_basis_mat = tensors.hstack_2d((temp_basis_mat, temp_vec))
 
         return Star(new_pred_mat, new_pred_bias, new_center, new_basis_mat)
 
@@ -365,15 +367,15 @@ class Star:
         # Lower star
         lower_c = tensors.matmul(mask, self.center)
         lower_b = tensors.matmul(mask, self.basis_matrix)
-        lower_pred = tensors.vstack((self.predicate_matrix, self.basis_matrix[index, :]))
-        lower_bias = tensors.vstack((self.predicate_bias, -self.center[index]))
+        lower_pred = tensors.vstack_2d((self.predicate_matrix, self.basis_matrix[index, :]))
+        lower_bias = tensors.vstack_2d((self.predicate_bias, -self.center[index]))
         lower_star = Star(lower_pred, lower_bias, lower_c, lower_b)
 
         # Upper star
         upper_c = self.center
         upper_b = self.basis_matrix
-        upper_pred = tensors.vstack((self.predicate_matrix, -self.basis_matrix[index, :]))
-        upper_bias = tensors.vstack((self.predicate_bias, self.center[index]))
+        upper_pred = tensors.vstack_2d((self.predicate_matrix, -self.basis_matrix[index, :]))
+        upper_bias = tensors.vstack_2d((self.predicate_bias, self.center[index]))
         upper_star = Star(upper_pred, upper_bias, upper_c, upper_b)
 
         return lower_star, upper_star
@@ -390,8 +392,8 @@ class Star:
         """
 
         aux_points = []
-        for i in range(self.predicate_matrix.shape[0]):
-            p = np.zeros((self.predicate_matrix.shape[1], 1))
+        for i in range(self.predicate_matrix.rows):
+            p = tensors.zeros((self.predicate_matrix.cols, 1))
             plane = self.predicate_matrix[i, :]
             max_nonzero_index = np.argmax(np.where(plane != 0, plane, -np.inf))
             p[max_nonzero_index] = self.predicate_bias[i] / plane[max_nonzero_index]
@@ -411,11 +413,11 @@ class Star:
         """
 
         starting_point = []
-        for i in range(self.predicate_matrix.shape[1]):
+        for i in range(self.predicate_matrix.cols):
 
             solver, alphas, constraints = self.__get_predicate_lp_solver()
             objective = solver.Objective()
-            for j in range(self.predicate_matrix.shape[1]):
+            for j in range(self.predicate_matrix.cols):
                 if j == i:
                     objective.SetCoefficient(alphas[j], 1)
                 else:
@@ -439,7 +441,7 @@ class Star:
 
             starting_point.append([(lb + ub) / 2.0])
 
-        starting_point = np.array(starting_point)
+        starting_point = tensors.array(starting_point)
         return starting_point
 
     def __get_starting_point(self) -> Tensor:
@@ -457,21 +459,21 @@ class Star:
 
         solver = pywraplp.Solver.CreateSolver('GLOP')
         alphas = []
-        for j in range(self.basis_matrix.shape[1]):
+        for j in range(self.basis_matrix.cols):
             new_alpha = solver.NumVar(-solver.infinity(), solver.infinity(), f'alpha_{j}')
             alphas.append(new_alpha)
         radius = solver.NumVar(0, solver.infinity(), 'radius')
 
         constraints = []
-        for k in range(self.predicate_matrix.shape[0]):
+        for k in range(self.predicate_matrix.rows):
             new_constraint = solver.Constraint(-solver.infinity(), self.predicate_bias[k, 0])
-            for j in range(self.predicate_matrix.shape[1]):
+            for j in range(self.predicate_matrix.cols):
                 new_constraint.SetCoefficient(alphas[j], self.predicate_matrix[k, j])
             new_constraint.SetCoefficient(radius, np.linalg.norm(self.predicate_matrix[k, :], 2))
             constraints.append(new_constraint)
 
         objective = solver.Objective()
-        for j in range(self.predicate_matrix.shape[1]):
+        for j in range(self.predicate_matrix.cols):
             objective.SetCoefficient(alphas[j], 0)
         objective.SetCoefficient(radius, 1)
 
@@ -486,7 +488,7 @@ class Star:
             starting_point.append([alpha.solution_value()])
         # print(radius.solution_value())
 
-        starting_point = np.array(starting_point)
+        starting_point = tensors.array(starting_point)
 
         return starting_point
 
@@ -504,14 +506,14 @@ class Star:
 
         solver = pywraplp.Solver.CreateSolver('GLOP')
         alphas = []
-        for j in range(self.basis_matrix.shape[1]):
+        for j in range(self.basis_matrix.cols):
             new_alpha = solver.NumVar(-solver.infinity(), solver.infinity(), f'alpha_{j}')
             alphas.append(new_alpha)
 
         constraints = []
-        for k in range(self.predicate_matrix.shape[0]):
+        for k in range(self.predicate_matrix.rows):
             new_constraint = solver.Constraint(-solver.infinity(), self.predicate_bias[k, 0])
-            for j in range(self.predicate_matrix.shape[1]):
+            for j in range(self.predicate_matrix.cols):
                 new_constraint.SetCoefficient(alphas[j], self.predicate_matrix[k, j])
             constraints.append(new_constraint)
 
@@ -528,8 +530,8 @@ class Star:
         new_basis_matrix = self.basis_matrix
         hs_pred_matrix = tensors.matmul(coef_mat, self.basis_matrix)
         hs_pred_bias = bias_mat - tensors.matmul(coef_mat, self.center)
-        new_pred_matrix = tensors.vstack((self.predicate_matrix, hs_pred_matrix))
-        new_pred_bias = tensors.vstack((self.predicate_bias, hs_pred_bias))
+        new_pred_matrix = tensors.vstack_2d((self.predicate_matrix, hs_pred_matrix))
+        new_pred_bias = tensors.vstack_2d((self.predicate_bias, hs_pred_bias))
 
         new_star: Star = Star(new_pred_matrix, new_pred_bias, new_center, new_basis_matrix)
 
@@ -591,7 +593,7 @@ class ExtendedStar(Star):
         """
 
         mask = np.diag(
-            [0 if neuron_n in inactive_neurons else 1 for neuron_n in range(self.basis_matrix.shape[0])]
+            [0 if neuron_n in inactive_neurons else 1 for neuron_n in range(self.basis_matrix.rows)]
         )
 
         return LinearFunctions(tensors.matmul(mask, self.basis_matrix), tensors.matmul(mask, self.center))
@@ -602,7 +604,7 @@ class ExtendedStar(Star):
 
         """
 
-        if weight.shape[1] != self.basis_matrix.shape[0]:
+        if weight.cols != self.basis_matrix.rows:
             raise Exception
 
         new_basis_matrix = tensors.matmul(weight, self.basis_matrix)
@@ -685,10 +687,10 @@ class ExtendedStar(Star):
         pred_bias = predicate_equation.offset
 
         def _get_left_matrix_for_unstable_neuron(neuron_n, lb, ub):
-            first_row = np.zeros(pred_matrix.shape[1])
+            first_row = np.zeros(pred_matrix.cols)
             second_row = self.get_neuron_equation(neuron_n).matrix
             third_row = - ub / (ub - lb) * self.get_neuron_equation(neuron_n).matrix
-            fourth_row = np.zeros(pred_matrix.shape[1])
+            fourth_row = np.zeros(pred_matrix.cols)
 
             return [first_row, second_row, third_row, fourth_row]
 
@@ -717,7 +719,7 @@ class ExtendedStar(Star):
         # 1 is the original predicate matrix, 2 is zeros,
         # 3 is lower_left_matrix and 4 is lower_right_matrix
         new_pred_matrix = np.block([
-            [pred_matrix, np.zeros((pred_matrix.shape[0], unstable_count))],
+            [pred_matrix, np.zeros((pred_matrix.rows, unstable_count))],
             [lower_left_matrix, lower_right_matrix]
         ])
 
@@ -753,7 +755,7 @@ class ExtendedStar(Star):
         new_transformation = self.mask_for_inactive_neurons(inactive + unstable_neurons)
 
         # Add a 1 for each fresh variable z
-        basis_height = self.basis_matrix.shape[0]
+        basis_height = self.basis_matrix.rows
         additional_basis_columns = np.zeros((basis_height, unstable_count))
         for i in range(unstable_count):
             additional_basis_columns[unstable_neurons[i]][i] = 1
