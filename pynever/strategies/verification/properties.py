@@ -1,10 +1,10 @@
 from fractions import Fraction
 
 import pynever.strategies.smt_reading as reading
-from pynever import tensor_classic
+from pynever import tensors
 from pynever.exceptions import InvalidDimensionError
 from pynever.strategies.abstraction.star import Star
-from pynever.tensor_classic import Tensor
+from pynever.tensors import Tensor
 
 
 class NeverProperty:
@@ -170,7 +170,7 @@ class LocalRobustnessProperty(NeverProperty):
 
     @staticmethod
     def build_matrices(sample: Tensor, epsilon: float, n_outputs: int, label: int, max_output: bool) -> tuple[
-            Tensor, Tensor, list[Tensor], list[Tensor]]:
+        Tensor, Tensor, list[Tensor], list[Tensor]]:
 
         if sample.shape[1] != 1:
             raise InvalidDimensionError('Wrong shape for the sample, should be mono-dimensional')

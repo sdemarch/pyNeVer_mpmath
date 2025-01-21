@@ -406,7 +406,7 @@ class SmtPropertyParser:
                     row[v_num] += read_smt_num(line[i - 2])
 
             # Row now is complete and can be put in the matrix
-            coef_mat[loop] = row
+            coef_mat[loop, :] = row.T
             loop += 1
 
         return coef_mat

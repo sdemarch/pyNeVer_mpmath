@@ -19,14 +19,14 @@ def ones(shape: tuple[int, ...]) -> mpmath.matrix:
     if len(shape) > 1:
         return mpmath.ones(*shape)
     else:
-        return mpmath.ones((1, shape[0]))
+        return mpmath.ones(*(shape[0], 1))
 
 
 def zeros(shape: tuple[int, ...]) -> mpmath.matrix:
     if len(shape) > 1:
         return mpmath.zeros(*shape)
     else:
-        return mpmath.zeros((1, shape[0]))
+        return mpmath.zeros(*(shape[0], 1))
 
 
 def reshape_2d(in_tensor: mpmath.matrix, new_shape: tuple[int, ...]) -> mpmath.matrix:
