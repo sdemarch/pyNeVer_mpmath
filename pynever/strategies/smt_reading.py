@@ -1,9 +1,10 @@
 import re
 
-import numpy as np
+import mpmath
 from pysmt.smtlib.parser import SmtLibParser
 
-from pynever.tensor_classic import Tensor
+from pynever import tensors
+from pynever.tensors import Tensor
 
 
 class ExprNode:
@@ -358,7 +359,8 @@ class SmtPropertyParser:
 
         # Prepare output
         n_var = len(vector)
-        coef_mat = np.zeros((len(asserts), n_var))
+        # coef_mat = np.zeros((len(asserts), n_var))
+        coef_mat = tensors.zeros((len(asserts), n_var))
 
         # Row counter
         loop = 0
@@ -366,7 +368,8 @@ class SmtPropertyParser:
         for a in asserts:
             # Tokenize
             line = a.replace('(', ' ( ').replace(')', ' ) ').split()
-            row = np.zeros(n_var)
+            # row = np.zeros(n_var)
+            row = tensors.zeros((n_var,))
             idx = []
 
             # Get variables index
@@ -386,7 +389,7 @@ class SmtPropertyParser:
                     if line[i + 1] == '*':
                         row[v_num] += read_smt_num(line[i + 2])
                     elif line[i + 1] == '/':
-                        row[v_num] += float(1 / read_smt_num(line[i + 2]))
+                        row[v_num] += mpmath.mpf((1 / read_smt_num(line[i + 2])))
                     else:
                         row[v_num] += 1
 
@@ -426,7 +429,8 @@ class SmtPropertyParser:
         """
 
         # Init
-        bias_mat = np.zeros((len(asserts), 1))
+        # bias_mat = np.zeros((len(asserts), 1))
+        bias_mat = tensors.zeros((len(asserts), 1))
         tree_converter = ExpressionTreeConverter()
 
         # Row counter
@@ -492,15 +496,15 @@ class SmtPropertyParser:
 
         return vec_list
 
-    def parse_property(self) -> (Tensor, Tensor, list, list):
+    def parse_property(self) -> tuple[Tensor, Tensor, list[Tensor], list[Tensor]]:
         """
         This method exposes the propriety parsing, performing all the steps and
         filling the Tensors.
 
         Returns
         ----------
-        NeVerProperty
-            The parsed property wrapped in the corresponding class
+        tuple
+            The coefficient and bias matrices for the pre- and post-conditions
 
         """
 
@@ -595,7 +599,7 @@ def is_operator(c: str):
         or c == '&' or c == '|'
 
 
-def read_smt_num(val: str):
+def read_smt_num(val: str) -> int | mpmath.mpf | None:
     """
     Procedure to convert a SMTLIB string to a number.
 
@@ -615,10 +619,10 @@ def read_smt_num(val: str):
 
     try:
         if '.' in val:
-            return float(val)
+            return mpmath.mpf(val)
         elif '/' in val:
             val = val.split('/')
-            return float(int(val[0]) / int(val[1]))
+            return mpmath.mpf(int(val[0]) / int(val[1]))
         else:
             return int(val)
     except ValueError:

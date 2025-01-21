@@ -15,15 +15,21 @@ class Tensor(mpmath.matrix):
     """Our internal representation of a Tensor of arbitrary precision"""
 
 
-def ones(shape: tuple[int]) -> mpmath.matrix:
-    return mpmath.ones(*shape)
+def ones(shape: tuple[int, ...]) -> mpmath.matrix:
+    if len(shape) > 1:
+        return mpmath.ones(*shape)
+    else:
+        return mpmath.ones((1, shape[0]))
 
 
-def zeros(shape: tuple[int]) -> mpmath.matrix:
-    return mpmath.zeros(*shape)
+def zeros(shape: tuple[int, ...]) -> mpmath.matrix:
+    if len(shape) > 1:
+        return mpmath.zeros(*shape)
+    else:
+        return mpmath.zeros((1, shape[0]))
 
 
-def reshape_2d(in_tensor: mpmath.matrix, new_shape: tuple[int]) -> mpmath.matrix:
+def reshape_2d(in_tensor: mpmath.matrix, new_shape: tuple[int, ...]) -> mpmath.matrix:
     """
     Procedure to reshape a 2d matrix
     (found on https://groups.google.com/g/mpmath/c/hvVeyEtZOMg)
@@ -50,7 +56,7 @@ def matmul(x1: mpmath.matrix, x2: mpmath.matrix) -> mpmath.matrix:
     return x1 * x2
 
 
-def vstack_2d(tup: tuple[mpmath.matrix]) -> mpmath.matrix:
+def vstack_2d(tup: tuple[mpmath.matrix, ...]) -> mpmath.matrix:
     """
     Procedure to stack two tensors vertically
 
@@ -76,7 +82,7 @@ def vstack_2d(tup: tuple[mpmath.matrix]) -> mpmath.matrix:
     return new_tensor
 
 
-def hstack_2d(tup: tuple[mpmath.matrix]) -> mpmath.matrix:
+def hstack_2d(tup: tuple[mpmath.matrix, ...]) -> mpmath.matrix:
     """
     Procedure to stack two tensors horizontally
 
