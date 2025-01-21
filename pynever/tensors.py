@@ -56,14 +56,33 @@ def matmul(x1: mpmath.matrix, x2: mpmath.matrix) -> mpmath.matrix:
     return x1 * x2
 
 
-def vstack_2d(tup: tuple[mpmath.matrix, ...]) -> mpmath.matrix:
+def to_matrix(tup: tuple[mpmath.matrix | mpmath.mpf, ...]) -> tuple[mpmath.matrix, ...]:
+    """
+    Sanitizer for mixed tuples
+
+    """
+
+    sanitized = ()
+
+    for t in tup:
+        if isinstance(t, mpmath.mpf):
+            sanitized += (mpmath.matrix([t]),)
+        else:
+            sanitized += (t,)
+
+    return sanitized
+
+
+def vstack_2d(tup: tuple[mpmath.matrix | mpmath.mpf, ...]) -> mpmath.matrix:
     """
     Procedure to stack two tensors vertically
 
     """
 
-    # Check compatibility
+    tup = to_matrix(tup)
     cols = tup[0].cols
+
+    # Check compatibility
     for t in tup:
         if t.cols != cols:
             raise Exception('Incorrect dimensions to stack')
@@ -82,14 +101,16 @@ def vstack_2d(tup: tuple[mpmath.matrix, ...]) -> mpmath.matrix:
     return new_tensor
 
 
-def hstack_2d(tup: tuple[mpmath.matrix, ...]) -> mpmath.matrix:
+def hstack_2d(tup: tuple[mpmath.matrix | mpmath.mpf, ...]) -> mpmath.matrix:
     """
     Procedure to stack two tensors horizontally
 
     """
 
-    # Check compatibility
+    tup = to_matrix(tup)
     rows = tup[0].rows
+
+    # Check compatibility
     for t in tup:
         if t.rows != rows:
             raise Exception('Incorrect dimensions to stack')

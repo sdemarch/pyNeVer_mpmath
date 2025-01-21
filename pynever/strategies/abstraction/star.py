@@ -152,8 +152,8 @@ class Star:
         solver, alphas, constraints = self.__get_predicate_lp_solver()
         objective = solver.Objective()
         for j in range(self.basis_matrix.cols):
-            objective.SetCoefficient(alphas[j], self.basis_matrix[i, j])
-        objective.SetOffset(self.center[i, 0])
+            objective.SetCoefficient(alphas[j], float(self.basis_matrix[i, j]))
+        objective.SetOffset(float(self.center[i, 0]))
 
         objective.SetMinimization()
 
@@ -205,7 +205,10 @@ class Star:
         if alpha_point.rows != self.predicate_matrix.cols:
             raise InvalidDimensionError(dim_error_msg)
 
-        tests = tensors.matmul(self.predicate_matrix, alpha_point) <= self.predicate_bias
+        tests = []
+        for i in range(self.predicate_bias.rows):
+            tests.append(tensors.matmul(self.predicate_matrix[i, :], alpha_point)[0] <= self.predicate_bias[i])
+
         test = np.all(tests)
 
         return test
@@ -271,15 +274,15 @@ class Star:
         while len(samples) < num_samples:
 
             direction = np.random.randn(self.predicate_matrix.cols, 1)
-            direction = mpmath.mpf(direction / la.norm(direction))
+            direction = tensors.array(direction / la.norm(direction))
             lambdas = []
             for i in range(self.predicate_matrix.rows):
 
                 if not np.isclose(tensors.matmul(self.predicate_matrix[i, :], direction), 0):
                     temp = auxiliary_points[i] - current_point
-                    lam = tensors.matmul(self.predicate_matrix[i, :], temp) / (
-                        tensors.matmul(self.predicate_matrix[i, :],
-                                       direction))
+                    t1 = tensors.matmul(self.predicate_matrix[i, :], temp)
+                    t2 = tensors.matmul(self.predicate_matrix[i, :], direction)
+                    lam = t1[0] / t2[0]
                     lambdas.append(lam)
 
             lambdas = np.array(lambdas)
@@ -295,7 +298,7 @@ class Star:
             next_point = current_point + increment * direction
             if self.check_alpha_inside(next_point):
                 current_point = next_point
-                star_point = self.center + np.matmul(self.basis_matrix, current_point)
+                star_point = self.center + tensors.matmul(self.basis_matrix, current_point)
                 samples.append(star_point)
                 self.__current_point = current_point
 
@@ -393,11 +396,12 @@ class Star:
 
         aux_points = []
         for i in range(self.predicate_matrix.rows):
-            p = tensors.zeros((self.predicate_matrix.cols, 1))
-            plane = self.predicate_matrix[i, :]
-            max_nonzero_index = np.argmax(np.where(plane != 0, plane, -np.inf))
-            p[max_nonzero_index] = self.predicate_bias[i] / plane[max_nonzero_index]
-            aux_points.append(p)
+            p = np.zeros((self.predicate_matrix.cols, 1))
+            plane = np.array(self.predicate_matrix[i, :])
+            if np.any(plane):
+                max_nonzero_index = np.argmax(np.where(plane != 0, plane, -np.inf))
+                p[max_nonzero_index] = float(self.predicate_bias[i]) / plane[max_nonzero_index]
+            aux_points.append(tensors.array(p))
 
         return aux_points
 
@@ -466,10 +470,10 @@ class Star:
 
         constraints = []
         for k in range(self.predicate_matrix.rows):
-            new_constraint = solver.Constraint(-solver.infinity(), self.predicate_bias[k, 0])
+            new_constraint = solver.Constraint(-solver.infinity(), float(self.predicate_bias[k, 0]))
             for j in range(self.predicate_matrix.cols):
-                new_constraint.SetCoefficient(alphas[j], self.predicate_matrix[k, j])
-            new_constraint.SetCoefficient(radius, np.linalg.norm(self.predicate_matrix[k, :], 2))
+                new_constraint.SetCoefficient(alphas[j], float(self.predicate_matrix[k, j]))
+            new_constraint.SetCoefficient(radius, float(np.linalg.norm(np.array(self.predicate_matrix[k, :]), 2)))
             constraints.append(new_constraint)
 
         objective = solver.Objective()
@@ -512,9 +516,9 @@ class Star:
 
         constraints = []
         for k in range(self.predicate_matrix.rows):
-            new_constraint = solver.Constraint(-solver.infinity(), self.predicate_bias[k, 0])
+            new_constraint = solver.Constraint(-solver.infinity(), float(self.predicate_bias[k, 0]))
             for j in range(self.predicate_matrix.cols):
-                new_constraint.SetCoefficient(alphas[j], self.predicate_matrix[k, j])
+                new_constraint.SetCoefficient(alphas[j], float(self.predicate_matrix[k, j]))
             constraints.append(new_constraint)
 
         return solver, alphas, constraints

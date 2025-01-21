@@ -10,6 +10,7 @@ from pynever.strategies.abstraction.star import AbsElement, Star, StarSet
 from pynever.strategies.bounds_propagation.bounds import AbstractBounds
 from pynever.strategies.verification.parameters import VerificationParameters
 
+from pynever import tensors
 
 # TODO update method documentation
 
@@ -150,12 +151,17 @@ class AbsFullyConnectedNode(AbsLayerNode):
 
     def __starset_forward(self, abs_input: StarSet) -> StarSet:
 
-        with multiprocessing.Pool(multiprocessing.cpu_count()) as my_pool:
-            parallel_results = my_pool.map(self._single_fc_forward, abs_input.stars)
-
+        # with multiprocessing.Pool(multiprocessing.cpu_count()) as my_pool:
+        #     parallel_results = my_pool.map(self._single_fc_forward, abs_input.stars)
+        #
+        # abs_output = StarSet()
+        # for star_set in parallel_results:
+        #     abs_output.stars = abs_output.stars.union(star_set)
         abs_output = StarSet()
-        for star_set in parallel_results:
-            abs_output.stars = abs_output.stars.union(star_set)
+
+        for star in abs_input.stars:
+            result = self._single_fc_forward(star)
+            abs_output.stars = abs_output.stars.union(result)
 
         return abs_output
 
@@ -166,14 +172,15 @@ class AbsFullyConnectedNode(AbsLayerNode):
         function internal to classes.
 
         """
-        if self.ref_node.weight.shape[1] != star.basis_matrix.shape[0]:
+
+        if self.ref_node.weight.cols != star.basis_matrix.rows:
             raise InvalidDimensionError("The shape of the weight matrix of the concrete node is different from the "
                                         "shape of the basis matrix")
 
-        bias = self.ref_node.get_layer_bias_as_two_dimensional()
+        # bias = self.ref_node.get_layer_bias_as_two_dimensional()
 
-        new_basis_matrix = np.matmul(self.ref_node.weight, star.basis_matrix)
-        new_center = np.matmul(self.ref_node.weight, star.center) + bias
+        new_basis_matrix = tensors.matmul(self.ref_node.weight, star.basis_matrix)
+        new_center = tensors.matmul(self.ref_node.weight, star.center) + self.ref_node.bias
         new_predicate_matrix = star.predicate_matrix
         new_predicate_bias = star.predicate_bias
 
@@ -275,8 +282,8 @@ class AbsReLUNode(AbsLayerNode):
 
     def __starset_forward(self, abs_input: StarSet) -> StarSet:
 
-        with multiprocessing.Pool(multiprocessing.cpu_count()) as my_pool:
-            parallel_results = my_pool.map(self._mixed_single_relu_forward, abs_input.stars)
+        # with multiprocessing.Pool(multiprocessing.cpu_count()) as my_pool:
+        #     parallel_results = my_pool.map(self._mixed_single_relu_forward, abs_input.stars)
 
         # Here we pop the first element of parameters.neurons_to_refine to preserve the layer ordering
         if hasattr(self.parameters, 'neurons_to_refine'):
@@ -292,12 +299,13 @@ class AbsReLUNode(AbsLayerNode):
         tot_areas = np.zeros(self.ref_node.get_input_dim())
         num_areas = 0
 
-        for star_set, areas in parallel_results:
-            abs_output.stars = abs_output.stars.union(star_set)
+        for star in abs_input.stars:
+            result, areas = self._mixed_single_relu_forward(star)
+            abs_output.stars = abs_output.stars.union(result)
 
             # Perform this code only if necessary
             if hasattr(self.parameters, 'compute_areas') and self.parameters.compute_areas:
-                if star_set != set():
+                if result != set():
                     num_areas = num_areas + 1
                     tot_areas = tot_areas + areas
 
