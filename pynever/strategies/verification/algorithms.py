@@ -20,7 +20,7 @@ from pynever.strategies.verification.parameters import SSLPVerificationParameter
 from pynever.strategies.verification.properties import NeverProperty
 from pynever.strategies.verification.ssbp.constants import BoundsBackend, IntersectionStrategy, RefinementTarget, \
     RefinementStrategy, BoundsDirection
-from pynever.tensor_classic import Tensor
+from pynever.tensors import Tensor
 
 
 class VerificationStrategy(abc.ABC):
@@ -110,15 +110,15 @@ class SSLPVerification(VerificationStrategy):
         # Compute symbolic bounds first. If the network architecture or the property
         # does not have a corresponding bound propagation method we skip the computation
         # TODO remove assert in bound propagation
-        try:
-            manager = BoundsManager()
-            self.layers_bounds = manager.compute_bounds_from_property(network, prop)
+        # try:
+        #     manager = BoundsManager()
+        #     self.layers_bounds = manager.compute_bounds_from_property(network, prop)
+        #     abst_network.set_bounds(self.layers_bounds.numeric_pre_bounds)
+        #
+        # except AssertionError:
+        #     self.logger.warning(f"Warning: Bound propagation unsupported")
+        #     self.layers_bounds = {}
 
-        except AssertionError:
-            self.logger.warning(f"Warning: Bound propagation unsupported")
-            self.layers_bounds = {}
-
-        abst_network.set_bounds(self.layers_bounds.numeric_pre_bounds)
 
         input_star = Star(prop.in_coef_mat, prop.in_bias_mat)
         input_starset = StarSet({input_star})

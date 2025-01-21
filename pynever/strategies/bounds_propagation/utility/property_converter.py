@@ -1,6 +1,7 @@
 import numpy as np
 
 from pynever.strategies.bounds_propagation.bounds import HyperRectangleBounds
+from pynever.strategies.verification.properties import NeverProperty
 
 DEBUG = False
 
@@ -18,12 +19,12 @@ class PropertyFormatConverter:
            The representation of vector d
        """
 
-    def __init__(self, property):
+    def __init__(self, prop: NeverProperty):
 
-        self.coeff = property.in_coef_mat
-        self.bias = property.in_bias_mat
+        self.coeff = prop.in_coef_mat
+        self.bias = prop.in_bias_mat
 
-        self.num_vars = self.coeff.shape[1]
+        self.num_vars = self.coeff.cols
 
         self.check_input_validity()
 
