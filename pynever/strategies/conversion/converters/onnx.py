@@ -4,7 +4,7 @@ import onnx.numpy_helper
 
 import pynever.networks as networks
 import pynever.nodes as nodes
-import pynever.tensor_classic as tensors
+from pynever import tensors
 from pynever.strategies.conversion.representation import ConversionStrategy, ONNXNetwork
 
 
@@ -623,7 +623,7 @@ class ONNXConverter(ConversionStrategy):
 
                 weight = tensors.array(weight)
 
-                out_features = weight.shape[0]
+                out_features = weight.rows
                 temp_fc = nodes.FullyConnectedNode(node.output[0], in_dim, out_features, weight, None, False)
                 matmul_found = True
 
@@ -694,14 +694,18 @@ class ONNXConverter(ConversionStrategy):
                     if (att.name == 'transA' or att.name == 'transB') and att.i == 0:
                         weight = parameters[node.input[1]].T
 
+                weight = tensors.array(weight)
+
                 if len(node.input) <= 2:
                     has_bias = False
                     bias = None
                 else:
                     has_bias = True
                     bias = parameters[node.input[2]]
+                    bias = tensors.array(bias)
 
-                out_features = weight.shape[0]
+
+                out_features = weight.rows
                 network.append_node(nodes.FullyConnectedNode(node.output[0], in_dim,
                                                              out_features, weight, bias, has_bias))
             elif node.op_type == "BatchNormalization":
