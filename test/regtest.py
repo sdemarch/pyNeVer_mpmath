@@ -12,7 +12,7 @@ import subprocess
 # Test SSBP
 
 print('Test SSBP single')
-subprocess.run(['python', 'never2_launcher.py', '-o', 'ssbp_single.csv',
+subprocess.run(['python', 'never2.py', '-o', 'ssbp_single.csv',
                 '-t', '60', '../Benchmarks/Test/test_small.onnx',
                 'examples/benchmarks/Test/test_small.vnnlib', 'ssbp'])
 
@@ -24,13 +24,13 @@ subprocess.run(['python', 'never2_batch.py', '-o', 'ssbp_batch.csv',
 # Test SSLP
 
 print('Test SSLP single - complete')
-subprocess.run(['python', 'never2_launcher.py', '-o', 'sslp_single1.csv',
+subprocess.run(['python', 'never2.py', '-o', 'sslp_single1.csv',
                 '-t', '60', '../Benchmarks/RL/Networks/cartpole.onnx',
                 '../Benchmarks/RL/Properties/cartpole_case_safe_99.vnnlib',
                 'sslp', '-s', 'complete'])
 
 print('Test SSLP single - approx')
-subprocess.run(['python', 'never2_launcher.py', '-o', 'sslp_single2.csv',
+subprocess.run(['python', 'never2.py', '-o', 'sslp_single2.csv',
                 '-t', '60', '../Benchmarks/Test/test_small.onnx',
                 '../Benchmarks/Test/test_small.vnnlib', 'sslp',
                 '-s', 'overapprox'])

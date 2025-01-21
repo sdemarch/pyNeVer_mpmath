@@ -1,5 +1,5 @@
 """
-Module never2_launcher.py
+Module never2.py
 
 Provides an entry point for the execution of NeVer2 on a single instance
 

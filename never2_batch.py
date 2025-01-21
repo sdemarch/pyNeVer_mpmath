@@ -10,7 +10,7 @@ Authors: Stefano Demarchi, Pedro Achete
 import os
 from argparse import ArgumentParser
 
-import never2_launcher
+import never2
 from pynever.scripts import cli
 
 parser = ArgumentParser(prog='NeVer2',
@@ -21,7 +21,7 @@ parser = ArgumentParser(prog='NeVer2',
 parser.add_argument('csv', help='Collection of instances to verify')
 parser.add_argument('out_dir', help='Output directory')
 
-parser = never2_launcher.add_options(parser)
+parser = never2.add_options(parser)
 
 if __name__ == '__main__':
     args = vars(parser.parse_args())
