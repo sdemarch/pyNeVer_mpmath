@@ -27,7 +27,7 @@ The packages required for the correct execution are the following:
 To install __pyNeVer__, just run the command:
 
 ```bash
-pip install pynever
+pip install mpynever
 ```
 
 To run some examples, further packages may be required. If an example requires a specific package, it will be 
@@ -43,8 +43,8 @@ Supported inputs
 At present the __pyNeVer__ package supports only the abstraction and verification of fully connected and convolutional 
 neural networks with ReLU and Sigmoid activation functions. The training and conversion supports also batch normalization
 layers. A network with batchnorm layers following fully connected layers can be converted to a "pure" fully connected
-neural networks using the capabilities provided in the [utilities.py](pynever/utilities.py) module.  
-The [conversion](pynever/strategies/conversion) package provides the capabilities for the conversion of PyTorch and ONNX
+neural networks using the capabilities provided in the [utilities.py](mpynever/utilities.py) module.  
+The [conversion](mpynever/strategies/conversion) package provides the capabilities for the conversion of PyTorch and ONNX
 networks: therefore this kind of networks can be loaded using the respective frameworks and then converted to the
 internal representation used by __pyNeVer__.  
 The properties for the verification and abstraction of the networks must be defined either in python code following

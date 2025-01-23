@@ -1,11 +1,11 @@
 import mpmath
 import numpy as np
 
-from pynever import nodes, tensors
-from pynever.networks import SequentialNetwork
-from pynever.strategies.verification.algorithms import SSLPVerification
-from pynever.strategies.verification.parameters import SSLPVerificationParameters
-from pynever.strategies.verification.properties import VnnLibProperty
+from mpynever import nodes, tensors
+from mpynever.networks import SequentialNetwork
+from mpynever.strategies.verification.algorithms import SSLPVerification
+from mpynever.strategies.verification.parameters import SSLPVerificationParameters
+from mpynever.strategies.verification.properties import VnnLibProperty
 
 # NETWORK DEFINITION
 # W = np.array([[1, 1], [1, -1]])

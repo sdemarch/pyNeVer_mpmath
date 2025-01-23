@@ -1,16 +1,16 @@
 import logging
 
-from pynever.strategies.conversion import representation
-from pynever.strategies.conversion.converters.onnx import ONNXConverter
-from pynever.strategies.verification.algorithms import SSBPVerification
-from pynever.strategies.verification.parameters import SSBPVerificationParameters
-from pynever.strategies.verification.properties import VnnLibProperty
-from pynever.strategies.verification.ssbp.constants import RefinementStrategy
+from mpynever.strategies.conversion import representation
+from mpynever.strategies.conversion.converters.onnx import ONNXConverter
+from mpynever.strategies.verification.algorithms import SSBPVerification
+from mpynever.strategies.verification.parameters import SSBPVerificationParameters
+from mpynever.strategies.verification.properties import VnnLibProperty
+from mpynever.strategies.verification.ssbp.constants import RefinementStrategy
 
-logger_stream = logging.getLogger("pynever.strategies.verification")
+logger_stream = logging.getLogger("mpynever.strategies.verification")
 logger_stream.addHandler(logging.StreamHandler())
 logger_stream.setLevel(logging.INFO)
-logger_stream = logging.getLogger("pynever.strategies.bounds_propagation")
+logger_stream = logging.getLogger("mpynever.strategies.bounds_propagation")
 logger_stream.addHandler(logging.StreamHandler())
 logger_stream.setLevel(logging.DEBUG)
 

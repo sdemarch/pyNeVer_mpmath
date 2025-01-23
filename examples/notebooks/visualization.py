@@ -3,7 +3,7 @@ import numpy as np
 import pypoman
 import scipy.spatial
 
-from pynever.strategies.abstraction.star import Star, StarSet
+from mpynever.strategies.abstraction.star import Star, StarSet
 
 
 def plot_star(p_star: Star, show=False, title=None, color=np.array([0.5, 0.5, 1])):

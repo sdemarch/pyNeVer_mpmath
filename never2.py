@@ -10,7 +10,7 @@ Authors: Stefano Demarchi, Pedro Achete
 import os
 from argparse import ArgumentParser
 
-from pynever.scripts import cli
+from mpynever.scripts import cli
 
 
 def add_options(p: ArgumentParser):

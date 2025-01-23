@@ -2,22 +2,22 @@ import csv
 import logging
 import time
 
-from pynever import utilities
-from pynever.networks import SequentialNetwork, NeuralNetwork
-import pynever.strategies.conversion.representation as convrepr
-from pynever.strategies.conversion.converters.onnx import ONNXConverter
-from pynever.strategies.verification.properties import VnnLibProperty
-import pynever.strategies.verification.algorithms as veralgs
-import pynever.strategies.verification.parameters as verparams
-from pynever.tensor_classic import Tensor
+from mpynever import utilities
+from mpynever.networks import SequentialNetwork, NeuralNetwork
+import mpynever.strategies.conversion.representation as convrepr
+from mpynever.strategies.conversion.converters.onnx import ONNXConverter
+from mpynever.strategies.verification.properties import VnnLibProperty
+import mpynever.strategies.verification.algorithms as veralgs
+import mpynever.strategies.verification.parameters as verparams
+from mpynever.tensor_classic import Tensor
 
 BENCHMARKS_PATH = '../../examples'
 
-logger_stream = logging.getLogger("pynever.strategies.verification")
+logger_stream = logging.getLogger("mpynever.strategies.verification")
 logger_stream.addHandler(logging.StreamHandler())
 logger_stream.setLevel(logging.INFO)
 
-logger_stream = logging.getLogger("pynever.strategies.bounds_propagation")
+logger_stream = logging.getLogger("mpynever.strategies.bounds_propagation")
 logger_stream.addHandler(logging.StreamHandler())
 logger_stream.setLevel(logging.DEBUG)
 

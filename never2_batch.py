@@ -11,7 +11,7 @@ import os
 from argparse import ArgumentParser
 
 import never2
-from pynever.scripts import cli
+from mpynever.scripts import cli
 
 parser = ArgumentParser(prog='NeVer2',
                         description='Neural Network verifier',

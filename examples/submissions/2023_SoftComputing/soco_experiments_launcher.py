@@ -9,17 +9,17 @@ import sys
 import time
 from contextlib import contextmanager
 
-from pynever.strategies.conversion.converters.onnx import ONNXConverter
-from pynever.strategies.conversion.representation import load_network_path, ONNXNetwork
-from pynever.strategies.verification.algorithms import SSLPVerification
-from pynever.strategies.verification.parameters import SSLPVerificationParameters
-from pynever.strategies.verification.properties import VnnLibProperty
+from mpynever.strategies.conversion.converters.onnx import ONNXConverter
+from mpynever.strategies.conversion.representation import load_network_path, ONNXNetwork
+from mpynever.strategies.verification.algorithms import SSLPVerification
+from mpynever.strategies.verification.parameters import SSLPVerificationParameters
+from mpynever.strategies.verification.properties import VnnLibProperty
 
 pynever_setting = [['Over-approx.', 'overapprox', [0]],
                    ['Mixed1', 'mixed', [1]],
                    ['Complete', 'complete', [10000]]]
 
-logger_stream = logging.getLogger("pynever.strategies.verification")
+logger_stream = logging.getLogger("mpynever.strategies.verification")
 logger_file = logging.getLogger("log_file")
 
 logger_stream.addHandler(logging.StreamHandler())

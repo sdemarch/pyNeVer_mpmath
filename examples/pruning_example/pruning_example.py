@@ -7,16 +7,16 @@ import torch.nn as nn
 import torch.optim as opt
 import torchvision.transforms as tr
 
-import pynever.datasets as dt
-import pynever.networks as networks
-import pynever.nodes as nodes
-import pynever.strategies.training as training
-import pynever.utilities as util
-from pynever.strategies import pruning
-from pynever.strategies.conversion.converters.onnx import ONNXConverter
+import mpynever.datasets as dt
+import mpynever.networks as networks
+import mpynever.nodes as nodes
+import mpynever.strategies.training as training
+import mpynever.utilities as util
+from mpynever.strategies import pruning
+from mpynever.strategies.conversion.converters.onnx import ONNXConverter
 
 # Logger Setup
-logger = logging.getLogger("pynever")
+logger = logging.getLogger("mpynever")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
