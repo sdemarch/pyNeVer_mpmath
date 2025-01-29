@@ -6,6 +6,7 @@ This module contains utility functions which may be used throughout the code.
 import copy
 
 import numpy
+import numpy as np
 import torch
 
 from mpynever import networks
@@ -32,9 +33,7 @@ def execute_network(network: networks.NeuralNetwork, net_input: tensors.Tensor) 
 
     """
 
-    if net_input.dtype == numpy.object_:
-        print("net_input", net_input)
-
+    net_input = np.array(net_input, dtype=np.float64)
     input_t = torch.Tensor(net_input)
 
     py_net = PyTorchConverter().from_neural_network(network)
